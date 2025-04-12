@@ -4,12 +4,14 @@ import { FaMicrophone, FaBusAlt } from 'react-icons/fa';
 const Dashboard = () => {
   return (
     <div className="text-white bg-black min-h-screen p-6 ">
+      <div className='flex flex-col items-center'>
       <h1 className="text-3xl font-bold text-[#42f5e6] mb-6">
         Welcome to Your Dashboard 👋
       </h1>
       <p className="text-gray-300 mb-8">
         What would you like to do today?
       </p>
+      </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
         {/* Voice Query */}
