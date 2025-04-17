@@ -3,65 +3,85 @@ import { useEffect, useState } from "react";
 
 export default function ManageTransport() {
   const [transports, setTransports] = useState([]);
-  const [loading, setLoading] = useState(true); // Add a loading state
+  const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [newTransport, setNewTransport] = useState({
+    _id: "",
+    capacity: "",
+    registration_number: "",
+  });
 
-  // Fetch transports when the component mounts
   useEffect(() => {
     const fetchTransports = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/transport");
-        console.log(response.data); // Log the response to ensure correct structure
-        setTransports(response.data); // Set transports to the fetched data
+        setTransports(response.data);
       } catch (err) {
         console.error("Error fetching transports:", err);
       } finally {
-        setLoading(false); // Set loading to false after data is fetched
+        setLoading(false);
       }
     };
 
     fetchTransports();
-  }, []); // Empty dependency array ensures it runs only once when component mounts
+  }, []);
 
-  // Handle adding a new transport
-  const handleAddTransport = async () => {
-    try {
-      const response = await axios.post("http://localhost:5000/api/transport", {
-        _id: "bus005", // Example transport data, update as per your needs
-        type: "bus",
-        operator_id: "op002",
-        capacity: 40,
-        registration_number: "KA02CD5678",
-      });
-      setTransports([...transports, response.data]);
-    } catch (err) {
-      console.error("Error adding transport:", err);
-    }
-  };
-
-  // Handle deleting a transport
   const handleDeleteTransport = async (_id) => {
     try {
       await axios.delete(`http://localhost:5000/api/transport/${_id}`);
-      setTransports(transports.filter((transport) => transport._id !== _id));
+      setTransports(transports.filter((t) => t._id !== _id));
     } catch (err) {
       console.error("Error deleting transport:", err);
     }
   };
 
-  // Handle updating a transport
-  const handleEditTransport = async (_id, updatedTransport) => {
+  const handleEditClick = (transport) => {
+    setEditingId(transport._id);
+    setEditData({
+      capacity: transport.capacity,
+      registration_number: transport.registration_number,
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditData({});
+  };
+
+  const handleSaveEdit = async (_id) => {
     try {
       const response = await axios.put(
         `http://localhost:5000/api/transport/${_id}`,
-        updatedTransport
+        editData
       );
       setTransports(
-        transports.map((transport) =>
-          transport._id === _id ? { ...transport, ...response.data } : transport
-        )
+        transports.map((t) => (t._id === _id ? { ...t, ...response.data } : t))
       );
+      setEditingId(null);
+      setEditData({});
     } catch (err) {
-      console.error("Error updating transport:", err);
+      console.error("Error saving edit:", err);
+    }
+  };
+
+  const handleAddTransport = async () => {
+    if (!newTransport._id || !newTransport.capacity || !newTransport.registration_number) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    try {
+      const response = await axios.post("http://localhost:5000/api/transport", {
+        ...newTransport,
+        type: "bus", // default value
+        operator_id: "op_default", // you can change this default if needed
+      });
+
+      setTransports([...transports, response.data]);
+      setNewTransport({ _id: "", capacity: "", registration_number: "" });
+    } catch (err) {
+      console.error("Error adding transport:", err);
     }
   };
 
@@ -70,15 +90,13 @@ export default function ManageTransport() {
       <h2 className="text-2xl font-bold text-white mb-6">Manage Transport</h2>
 
       {loading ? (
-        <div className="text-white">Loading...</div> // Show loading state while fetching data
+        <div className="text-white">Loading...</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full bg-[#0f0f0f] border border-[#42f5e6] rounded-xl">
             <thead>
               <tr className="text-[#42f5e6] border-b border-[#42f5e6]">
                 <th className="p-3 text-left">ID</th>
-                <th className="p-3 text-left">Type</th>
-                <th className="p-3 text-left">Operator ID</th>
                 <th className="p-3 text-left">Capacity</th>
                 <th className="p-3 text-left">Registration Number</th>
                 <th className="p-3 text-left">Actions</th>
@@ -87,7 +105,7 @@ export default function ManageTransport() {
             <tbody>
               {transports.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="p-3 text-center text-white">
+                  <td colSpan="4" className="p-3 text-center text-white">
                     No transports available
                   </td>
                 </tr>
@@ -95,28 +113,72 @@ export default function ManageTransport() {
                 transports.map((t) => (
                   <tr key={t._id} className="text-white border-t border-[#42f5e6]">
                     <td className="p-3">{t._id}</td>
-                    <td className="p-3">{t.type}</td>
-                    <td className="p-3">{t.operator_id}</td>
-                    <td className="p-3">{t.capacity}</td>
-                    <td className="p-3">{t.registration_number}</td>
+
                     <td className="p-3">
-                      <button
-                        className="bg-[#42f5e6] text-black px-2 py-1 rounded mr-2"
-                        onClick={() =>
-                          handleEditTransport(t._id, {
-                            ...t,
-                            capacity: t.capacity + 10, // Example change
-                          })
-                        }
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="border border-[#42f5e6] px-2 py-1 rounded text-[#42f5e6]"
-                        onClick={() => handleDeleteTransport(t._id)}
-                      >
-                        Delete
-                      </button>
+                      {editingId === t._id ? (
+                        <input
+                          type="number"
+                          className="bg-gray-700 text-white px-2 py-1 rounded"
+                          value={editData.capacity}
+                          onChange={(e) =>
+                            setEditData({ ...editData, capacity: e.target.value })
+                          }
+                        />
+                      ) : (
+                        t.capacity
+                      )}
+                    </td>
+
+                    <td className="p-3">
+                      {editingId === t._id ? (
+                        <input
+                          type="text"
+                          className="bg-gray-700 text-white px-2 py-1 rounded"
+                          value={editData.registration_number}
+                          onChange={(e) =>
+                            setEditData({
+                              ...editData,
+                              registration_number: e.target.value,
+                            })
+                          }
+                        />
+                      ) : (
+                        t.registration_number
+                      )}
+                    </td>
+
+                    <td className="p-3">
+                      {editingId === t._id ? (
+                        <>
+                          <button
+                            className="bg-[#42f5e6] text-black px-2 py-1 rounded mr-2"
+                            onClick={() => handleSaveEdit(t._id)}
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="border border-[#42f5e6] px-2 py-1 rounded text-[#42f5e6]"
+                            onClick={handleCancelEdit}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            className="bg-[#42f5e6] text-black px-2 py-1 rounded mr-2"
+                            onClick={() => handleEditClick(t)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="border border-[#42f5e6] px-2 py-1 rounded text-[#42f5e6]"
+                            onClick={() => handleDeleteTransport(t._id)}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -126,11 +188,37 @@ export default function ManageTransport() {
         </div>
       )}
 
-      {/* Add new transport form (for demonstration purposes) */}
-      <div className="mt-6">
+      {/* Add new transport section */}
+      <div className="mt-6 bg-[#0f0f0f] border border-[#42f5e6] p-4 rounded-xl">
+        <h3 className="text-lg font-semibold text-white mb-4">Add New Transport</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input
+            type="text"
+            placeholder="Transport ID"
+            className="px-4 py-2 rounded bg-gray-800 text-white"
+            value={newTransport._id}
+            onChange={(e) => setNewTransport({ ...newTransport, _id: e.target.value })}
+          />
+          <input
+            type="number"
+            placeholder="Capacity"
+            className="px-4 py-2 rounded bg-gray-800 text-white"
+            value={newTransport.capacity}
+            onChange={(e) => setNewTransport({ ...newTransport, capacity: e.target.value })}
+          />
+          <input
+            type="text"
+            placeholder="Registration Number"
+            className="px-4 py-2 rounded bg-gray-800 text-white"
+            value={newTransport.registration_number}
+            onChange={(e) =>
+              setNewTransport({ ...newTransport, registration_number: e.target.value })
+            }
+          />
+        </div>
         <button
           onClick={handleAddTransport}
-          className="bg-[#42f5e6] text-black px-4 py-2 rounded"
+          className="mt-4 bg-[#42f5e6] text-black px-4 py-2 rounded"
         >
           Add Transport
         </button>
