@@ -5,45 +5,74 @@ const Transport = require('../models/Transport');
 
 // Helper function to process queries
 const processQuery = async (queryText) => {
-  // Convert query to lowercase for easier matching
-  const query = queryText.toLowerCase();
-  
-  // Check for bus-related queries
-  if (query.includes('bus')) {
-    const destination = extractDestination(query);
-    if (destination) {
-      const buses = await Transport.find({
-        type: 'Bus',
-        route: { $regex: destination, $options: 'i' }
-      }).sort({ departure: 1 });
-      
-      if (buses.length > 0) {
-        const nextBus = buses[0];
-        return `The next bus to ${destination} is at ${nextBus.departure} from ${nextBus.departurePoint}.`;
+  try {
+    // Convert query to lowercase for easier matching
+    const query = queryText.toLowerCase();
+    
+    // Check for bus-related queries
+    if (query.includes('bus')) {
+      const destination = extractDestination(query);
+      if (destination) {
+        const buses = await Transport.find({
+          type: 'bus',
+          route: { $regex: destination, $options: 'i' }
+        }).sort({ departure: 1 });
+        
+        if (buses.length > 0) {
+          const nextBus = buses[0];
+          return {
+            response: `The next bus to ${destination} is at ${nextBus.departure} from ${nextBus.departurePoint}.`,
+            intent: 'schedule_lookup'
+          };
+        }
+        return {
+          response: `Sorry, I couldn't find any buses to ${destination}.`,
+          intent: 'schedule_lookup'
+        };
       }
-      return `Sorry, I couldn't find any buses to ${destination}.`;
+      return {
+        response: "Please specify a destination for the bus query.",
+        intent: 'schedule_lookup'
+      };
     }
-    return "Please specify a destination for the bus query.";
-  }
 
-  // Check for schedule queries
-  if (query.includes('schedule') || query.includes('time')) {
-    const route = extractRoute(query);
-    if (route) {
-      const schedule = await Transport.find({
-        route: { $regex: route, $options: 'i' }
-      }).sort({ departure: 1 });
-      
-      if (schedule.length > 0) {
-        return `Schedule for ${route}: ${schedule.map(s => `${s.departure} - ${s.arrival}`).join(', ')}`;
+    // Check for schedule queries
+    if (query.includes('schedule') || query.includes('time')) {
+      const route = extractRoute(query);
+      if (route) {
+        const schedule = await Transport.find({
+          route: { $regex: route, $options: 'i' }
+        }).sort({ departure: 1 });
+        
+        if (schedule.length > 0) {
+          return {
+            response: `Schedule for ${route}: ${schedule.map(s => `${s.departure} - ${s.arrival}`).join(', ')}`,
+            intent: 'schedule_lookup'
+          };
+        }
+        return {
+          response: `Sorry, I couldn't find the schedule for ${route}.`,
+          intent: 'schedule_lookup'
+        };
       }
-      return `Sorry, I couldn't find the schedule for ${route}.`;
+      return {
+        response: "Please specify a route for the schedule query.",
+        intent: 'schedule_lookup'
+      };
     }
-    return "Please specify a route for the schedule query.";
-  }
 
-  // Default response for unrecognized queries
-  return "I'm sorry, I couldn't understand your query. Please try asking about bus schedules or routes.";
+    // Default response for unrecognized queries
+    return {
+      response: "I'm sorry, I couldn't understand your query. Please try asking about bus schedules or routes.",
+      intent: 'general_query'
+    };
+  } catch (error) {
+    console.error('Error processing query:', error);
+    return {
+      response: "Sorry, there was an error processing your query. Please try again.",
+      intent: 'general_query'
+    };
+  }
 };
 
 // Helper function to extract destination from query
@@ -63,6 +92,11 @@ const extractRoute = (query) => {
   return routeMatch ? routeMatch[1] : null;
 };
 
+// Generate a unique ID for the query
+const generateQueryId = () => {
+  return 'VQ' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+};
+
 // POST endpoint to handle voice queries
 router.post('/', async (req, res) => {
   try {
@@ -72,19 +106,23 @@ router.post('/', async (req, res) => {
     }
 
     // Process the query and generate response
-    const response = await processQuery(query);
+    const { response, intent } = await processQuery(query);
 
     // Create and save the voice query with response
     const voiceQuery = new VoiceQuery({
-      queryText: query,
-      response: response
+      _id: generateQueryId(),
+      user_id: 'default_user', // You can replace this with actual user ID when authentication is implemented
+      query_text: query,
+      response: response,
+      intent: intent
     });
 
     const savedQuery = await voiceQuery.save();
     res.status(201).json({
       _id: savedQuery._id,
-      query: savedQuery.queryText,
+      query: savedQuery.query_text,
       response: savedQuery.response,
+      intent: savedQuery.intent,
       timestamp: savedQuery.timestamp
     });
   } catch (error) {

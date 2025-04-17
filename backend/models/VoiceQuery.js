@@ -11,16 +11,20 @@ const voiceQuerySchema = new mongoose.Schema({
   },
   timestamp: {
     type: Date,
-    required: true
+    default: Date.now
   },
   query_text: {
+    type: String,
+    required: true
+  },
+  response: {
     type: String,
     required: true
   },
   intent: {
     type: String,
     required: true,
-    enum: ['schedule_lookup', 'booking_request'] // Add other possible intents as needed
+    enum: ['schedule_lookup', 'booking_request', 'general_query']
   }
 }, {
   timestamps: false, // Since we have our own timestamp field

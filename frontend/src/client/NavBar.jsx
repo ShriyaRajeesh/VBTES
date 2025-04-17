@@ -10,7 +10,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/login');
+    navigate('/admin');
   };
 
   return (
@@ -31,7 +31,7 @@ const Navbar = () => {
             onClick={handleLogout}
             className="bg-[#42f5e6] text-black px-3 py-1 rounded hover:bg-[#2cdad0] transition text-sm"
           >
-            Logout
+            Admin
           </button>
         </div>
 
@@ -51,7 +51,7 @@ const Navbar = () => {
             onClick={() => { toggleMenu(); handleLogout(); }}
             className="bg-[#42f5e6] text-black px-3 py-1 rounded hover:bg-[#2cdad0] text-sm w-max"
           >
-            Logout
+            Admin
           </button>
         </div>
       )}
