@@ -1,10 +1,35 @@
 const mongoose = require('mongoose');
 
-const VoiceQuerySchema = new mongoose.Schema({
-  userId: mongoose.Schema.Types.ObjectId,
-  queryText: String,
-  response: String,
-  timestamp: { type: Date, default: Date.now }
+const voiceQuerySchema = new mongoose.Schema({
+  _id: {
+    type: String,
+    required: true
+  },
+  user_id: {
+    type: String,
+    required: true
+  },
+  timestamp: {
+    type: Date,
+    required: true
+  },
+  query_text: {
+    type: String,
+    required: true
+  },
+  intent: {
+    type: String,
+    required: true,
+    enum: ['schedule_lookup', 'booking_request'] // Add other possible intents as needed
+  }
+}, {
+  timestamps: false, // Since we have our own timestamp field
+  versionKey: false // Disable the version key (__v)
 });
 
-module.exports = mongoose.model('VoiceQuery', VoiceQuerySchema);
+// Create text index for search functionality
+voiceQuerySchema.index({ query_text: 'text' });
+
+const VoiceQuery = mongoose.model('VoiceQuery', voiceQuerySchema);
+
+module.exports = VoiceQuery;

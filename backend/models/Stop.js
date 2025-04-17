@@ -1,6 +1,32 @@
 const mongoose = require('mongoose');
-const StopSchema = new mongoose.Schema({
-  name: String,
-  location: String
+const busStopSchema = new mongoose.Schema({
+  _id: {
+    type: String,
+    required: true
+  },
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+    index: true
+  },
+  location: {
+    type: {
+      type: String,
+      default: 'Point',
+      enum: ['Point']
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true
+    }
+  }
+}, {
+  timestamps: false,
+  versionKey: false
 });
-module.exports = mongoose.model('Stop', StopSchema);
+
+// Create a geospatial index for location searches
+busStopSchema.index({ location: '2dsphere' });
+
+const Stop = mongoose.model('Stop', busStopSchema);

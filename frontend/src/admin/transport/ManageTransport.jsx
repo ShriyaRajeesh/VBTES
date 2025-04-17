@@ -26,7 +26,7 @@ export default function ManageTransport() {
   const handleAddTransport = async () => {
     try {
       const response = await axios.post("http://localhost:5000/api/transport", {
-        _id: "bus002", // Example transport data, update as per your needs
+        _id: "bus005", // Example transport data, update as per your needs
         type: "bus",
         operator_id: "op002",
         capacity: 40,
