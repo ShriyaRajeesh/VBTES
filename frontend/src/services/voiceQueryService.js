@@ -1,26 +1,48 @@
-import api from '../config/api';
+const voiceQueryService = {
+  // Function to handle the API request for submitting the voice query
+  submitVoiceQuery: async ({ query }) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/voicequeries', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query }), // Sending the query in the request body
+      });
 
-export const voiceQueryService = {
-  // Submit a voice query
-  async submitVoiceQuery(queryData) {
-    return api.fetchApi('/voicequeries', {
-      method: 'POST',
-      body: JSON.stringify(queryData),
-    });
+      if (!response.ok) {
+        throw new Error('Failed to fetch the response from the server');
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (err) {
+      console.error(err);
+      throw new Error('Error submitting query: ' + err.message);
+    }
   },
 
-  // Get voice query logs
-  async getVoiceQueryLogs() {
-    return api.fetchApi('/voicequeries/logs');
-  },
+  // Function to handle the API request for getting voice query data
+  getVoiceQueries: async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/voicequeries', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-  // Get voice query by ID
-  async getVoiceQueryById(id) {
-    return api.fetchApi(`/voicequeries/${id}`);
-  },
+      if (!response.ok) {
+        throw new Error('Failed to fetch voice queries from the server');
+      }
 
-  // Get voice query status
-  async getVoiceQueryStatus(id) {
-    return api.fetchApi(`/voicequeries/${id}/status`);
-  }
-}; 
+      const result = await response.json();
+      return result;
+    } catch (err) {
+      console.error(err);
+      throw new Error('Error getting voice queries: ' + err.message);
+    }
+  },
+};
+
+export { voiceQueryService };
