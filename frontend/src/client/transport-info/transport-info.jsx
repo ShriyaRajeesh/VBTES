@@ -1,18 +1,30 @@
-import React, { useState } from "react";
-
-// Dummy data for intercity buses only
-const transportData = [
-  { id: 1, type: "Bus", departure: "08:30 AM", arrival: "09:00 AM", route: "Route 1" },
-  { id: 2, type: "Bus", departure: "10:30 AM", arrival: "11:00 AM", route: "Route 2" },
-  { id: 3, type: "Bus", departure: "12:15 PM", arrival: "01:00 PM", route: "Route 3" },
-  // Add more bus data as needed
-];
+import React, { useState, useEffect } from "react";
+import { transportService } from "../../services/transportService";
 
 const TransportInfo = () => {
+  const [transportData, setTransportData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     route: "",
     time: "",
   });
+
+  useEffect(() => {
+    const fetchTransportData = async () => {
+      try {
+        const data = await transportService.getAllTransport();
+        setTransportData(data);
+        setLoading(false);
+      } catch (err) {
+        setError("Failed to load transport data");
+        setLoading(false);
+        console.error("Error fetching transport data:", err);
+      }
+    };
+
+    fetchTransportData();
+  }, []);
 
   const filteredData = transportData.filter((item) => {
     return (
@@ -20,6 +32,22 @@ const TransportInfo = () => {
       (filters.time === "" || item.departure.includes(filters.time))
     );
   });
+
+  if (loading) {
+    return (
+      <div className="p-8 min-h-screen bg-black text-[#42f5e6] flex items-center justify-center">
+        <div className="text-2xl">Loading transport information...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 min-h-screen bg-black text-[#42f5e6] flex items-center justify-center">
+        <div className="text-2xl text-red-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 min-h-screen bg-black text-[#42f5e6]">
@@ -47,15 +75,18 @@ const TransportInfo = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {filteredData.length > 0 ? (
           filteredData.map((item) => (
-            <div key={item.id} className="bg-gray-800 p-6 rounded-lg shadow-lg">
-              <h3 className="text-xl font-semibold">Bus</h3>
-              <p className="mt-2">Route: {item.route}</p>
-              <p>Departure: {item.departure}</p>
-              <p>Arrival: {item.arrival}</p>
+            <div key={item._id} className="bg-gray-800 p-6 rounded-lg shadow-lg">
+              <h3 className="text-xl font-semibold mb-2">{item.type}</h3>
+              <p className="mb-1">Route: {item.route}</p>
+              <p className="mb-1">Departure: {item.departure}</p>
+              <p className="mb-1">Arrival: {item.arrival}</p>
+              <p className="mb-1">Status: {item.status || 'On Time'}</p>
             </div>
           ))
         ) : (
-          <p className="col-span-full text-center text-gray-400">No bus options found.</p>
+          <div className="col-span-full text-center text-xl">
+            No transport found matching your filters
+          </div>
         )}
       </div>
     </div>

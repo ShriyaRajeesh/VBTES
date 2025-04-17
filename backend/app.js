@@ -1,9 +1,22 @@
 const express = require('express');
 const connectDB = require('./config/db');
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
 connectDB();
+const Transport = require('./models/Transport')
+Transport.find().then(console.log)
+
+
+// Enable CORS for frontend
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? 'https://your-production-domain.com' // Replace with your production domain
+    : 'http://localhost:5173', // Vite's default development port
+  credentials: true
+}));
+
 app.use(express.json());
 
 app.use('/api/bookings', require('./routes/bookings'));
