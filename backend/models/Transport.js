@@ -1,17 +1,29 @@
 const mongoose = require('mongoose');
 
-const TransportSchema = new mongoose.Schema({
-  _id: { type: String, required: true }, // "bus001", "bus002", etc.
-  type: { type: String, required: true }, // e.g., "bus"
-  route: { type: String, required: true },
-  departure: { type: String, required: true },
-  arrival: { type: String, required: true },
-  departurePoint: { type: String, required: true },
-  arrivalPoint: { type: String, required: true },
-  operator_id: { type: String, required: true }, // e.g., "op001"
-  capacity: { type: Number, required: true }, // e.g., 50
-  registration_number: { type: String, required: true }, // e.g., "KA01AB1234"
-  status: { type: String, default: 'On Time' }
+const transportSchema = new mongoose.Schema({
+  _id: {
+    type: String,
+    required: true // e.g., "bus002"
+  },
+  type: {
+    type: String,
+    required: true, // e.g., "bus", "train", etc.
+    enum: ['bus', 'train', 'metro'] // Add more types if needed
+  },
+  operator_id: {
+    type: String,
+    required: true // e.g., "op002"
+  },
+  capacity: {
+    type: Number,
+    required: true // e.g., 46
+  },
+  registration_number: {
+    type: String,
+    required: true // e.g., "KA02CD5678"
+  }
+}, {
+  timestamps: true // Adds createdAt and updatedAt automatically
 });
 
-module.exports = mongoose.model('Transport', TransportSchema, 'transport');
+module.exports = mongoose.model('Transport', transportSchema);

@@ -91,6 +91,22 @@ router.post('/', async (req, res) => {
     const { query } = req.body;
     if (!query) return res.status(400).json({ error: 'Query text is required.' });
 
+    // First check if similar query already exists in DB
+    const existingQuery = await VoiceQuery.findOne({
+      query_text: { $regex: new RegExp(query, 'i') } // case-insensitive partial match
+    });
+
+    if (existingQuery) {
+      return res.status(200).json({
+        _id: existingQuery._id,
+        query: existingQuery.query_text,
+        response: existingQuery.response,
+        intent: existingQuery.intent,
+        timestamp: existingQuery.timestamp
+      });
+    }
+
+    // If no match, process and save new query
     const { response, intent } = await processQuery(query);
 
     const newQuery = new VoiceQuery({

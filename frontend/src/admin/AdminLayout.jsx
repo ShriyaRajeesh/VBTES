@@ -20,7 +20,7 @@ export default function AdminLayout() {
           </NavLink>
           <NavLink to="/admin/transport">Manage Transport</NavLink>
           <NavLink to="/admin/routes">Manage Routes</NavLink>
-          <NavLink to="/admin/voice-logs">Voice Query Logs</NavLink>
+          {/* <NavLink to="/admin/voice-logs">Voice Query Logs</NavLink> */}
         </nav>
       </aside>
 

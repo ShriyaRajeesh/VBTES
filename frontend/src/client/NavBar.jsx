@@ -25,7 +25,7 @@ const Navbar = () => {
         <div className="hidden md:flex space-x-6 items-center">
           <Link to="dashboard" className="hover:text-[#42f5e6] transition">Home</Link>
           <Link to="voice-query" className="hover:text-[#42f5e6] transition">Voice Query</Link>
-          <Link to="transport-info" className="hover:text-[#42f5e6] transition">Transport</Link>
+          {/* <Link to="transport-info" className="hover:text-[#42f5e6] transition">Transport</Link> */}
           
           <button
             onClick={handleLogout}
@@ -46,7 +46,7 @@ const Navbar = () => {
         <div className="md:hidden mt-4 flex flex-col space-y-4 px-4 text-white">
           <Link to="dashboard" onClick={toggleMenu} className="hover:text-[#42f5e6]">Home</Link>
           <Link to="voice-query" onClick={toggleMenu} className="hover:text-[#42f5e6]">Voice Query</Link>
-          <Link to="transport-info" onClick={toggleMenu} className="hover:text-[#42f5e6]">Transport</Link>
+          {/* <Link to="transport-info" onClick={toggleMenu} className="hover:text-[#42f5e6]">Transport</Link> */}
           <button
             onClick={() => { toggleMenu(); handleLogout(); }}
             className="bg-[#42f5e6] text-black px-3 py-1 rounded hover:bg-[#2cdad0] text-sm w-max"
